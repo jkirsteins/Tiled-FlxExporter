@@ -9,6 +9,7 @@
 #include <QTextStream>
 #include <QFileInfo>
 #include <QDebug>
+#include <QList>
 
 #include "tilelayer.h"
 #include "layer.h"
@@ -218,23 +219,58 @@ QString AS3Level::generateLayerVarName(const Tiled::Layer *layer) const
 const QString AS3Level::generateTileData(Tiled::Layer *layer,
                                 const QMap<Tiled::Tile *, int> idMap) const
 {
-    QString tileData;
+    QString tileDataString;
+    QList<int> tileData;
+
+    const int maxLength = layer->height() * layer->width();
+
     for (int j = 0; j < layer->height(); ++j)
     {
         for (int i = 0; i < layer->width(); ++i)
         {
-            QTextStream(&tileData)
+            Tiled::Tile* tile = layer->asTileLayer()->tileAt(i, j);
+
+            int xTileParts = tile != NULL ? tile->width() / layer->map()->tileWidth() : 1;
+            int yTileParts = tile != NULL ? tile->height() / layer->map()->tileHeight() : 1;
+
+            for (int l = yTileParts - 1; l >= 0; --l)
+            {
+                int negativeOffset = l * layer->width();
+                for (int k = 0; k < xTileParts; ++k)
+                {
+                    int id = idMap[tile];
+                    int index = tileData.length() - negativeOffset + k;
+
+                    if (index < tileData.length())
+                    {
+                        tileData[index] = id;
+                    }
+                    else if (index < maxLength)
+                    {
+                        tileData.append(idMap[tile]);
+                    }
+                }
+            }
+            /*QTextStream(&tileData)
                     << idMap[layer->asTileLayer()->tileAt(i, j)]
-                    << (i < (layer->width() - 1) ? "," : "");
+                    << (i < (layer->width() - 1) ? "," : "");*/
         }
-        if (j != (layer->height() - 1))
-            QTextStream(&tileData) << "\\n";
+        //if (j != (layer->height() - 1))
+        //    QTextStream(&tileData) << "\\n";
+    }
+
+    for (int i = 0; i < tileData.length(); ++i)
+    {
+        bool lastCol = (i > 0) && (((i+1) % layer->width()) == 0);
+        QTextStream(&tileDataString)
+                << tileData[i]
+                << (lastCol ? "\\n" : ",");
     }
 
     QString result;
     QTextStream(&result)
             << "protected const " << this->generateLayerVarName(layer)
-            << QString("TileData: String = \"%1\";\n\t\t").arg(tileData);
+            << QString("TileData: String = \"%1\";\n\t\t").arg(tileDataString);
 
     return result;
 }
