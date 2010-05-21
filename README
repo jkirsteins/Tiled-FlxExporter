@@ -1,0 +1,24 @@
+FlxExporter
+
+ABOUT FLXEXPORTER
+
+FlxExporter is a plugin for Tiled Map Editor that adds a new export
+format for maps - ActionScript 3.0 source. It generates a class
+that inherits from FlxGroup and can be used directly in
+Flixel projects, without writing an importer.
+
+FlxExporter is available only for the Qt version of Tiled Map Editor.
+
+COMPILING
+
+Put the plugin folder in %TILED%/plugins/src, where %TILED% is the
+path to Tiled source.
+
+Then modify %TILED%/plugins/src/plugins.pro and add FlxExporter to
+subdirs:
+
+    (e.g., subdirs=FlxExporter tmw)
+	
+Run qmake.
+
+Now compile Tiled as usual and FlxExporter should be built with it.

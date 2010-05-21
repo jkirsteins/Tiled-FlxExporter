@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>baseLevelTemplate.as</file>
+        <file>flixel.gif</file>
+        <file>derivedLevelTemplate.as</file>
+    </qresource>
+</RCC>
