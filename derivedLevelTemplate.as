@@ -1,18 +1,20 @@
-package %packageName%
+package %derivedPackageName%
 {
-	import %basePackageName%;
+	import %packageName%.%className%;
 	
 	/**
 	 * ...
-	 * @author 
+	 * @author ...
+	 * @version ...
+	 * @date %generationDate%
 	 */
-	public class %className% extends %baseClassName%
+	public class %derivedClassName% extends %className%
 	{
-		public function %className%() 
+		public function LevelTest() 
 		{
+			super();
 			
 		}
-		
 	}
 
 }

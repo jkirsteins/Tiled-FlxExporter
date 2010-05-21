@@ -17,24 +17,32 @@ package %packageName%
 	 */
 	public class %className% extends FlxGroup
 	{
+		//{ region Constant graphical asset declarations
 		/* Tilesheet graphics */
 		%gfxEmbedStatements%
+		//} endregion
 		
+		//{ region Tile index strings
 		/* Layer tile data */
 		%layerTileData%
+		//} endregion
 		
+		//{ region Tilemap variable declarations
 		/* Tilemap declarations */
 		%tilemapDeclarations%
+		//} endregion
 		
 		public function %className%() 
 		{
 			initializeTilemaps();
 		}
 		
+		//{ region Initialization functions
 		protected function initializeTilemaps(): void
 		{
 			%tilemapInitialization%
 		}
+		//} endregion
 		
 	}
 

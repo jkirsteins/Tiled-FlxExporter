@@ -46,17 +46,31 @@ void AS3Level::saveLayerTilesheet(const QString &fileName,
                                   ) const
 {
     // index 0 = NULL
-    unsigned int xRatio = idMap.keys().at(1)->width() / map->tileWidth();
-    unsigned int yRatio = idMap.keys().at(1)->height() / map->tileWidth();
-    unsigned int partsPerTile = xRatio * yRatio;
+    //unsigned int tileCount = 1 + idMap.count() * partsPerTile;
 
-    unsigned int tileCount = 1 + idMap.count() * partsPerTile;
+    unsigned int imageWidth = map->tileWidth();     // initial empty tile for flixel
+    foreach (Tiled::Tile *tile, idMap.keys())
+    {
+        if (tile == NULL) continue;
 
-    QPixmap pm(tileCount * map->tileWidth(),
+        int partCount = (tile->width() * tile->height()) / (map->tileWidth() * map->tileHeight());
+        imageWidth += partCount * map->tileWidth();
+    }
+
+    QPixmap pm(imageWidth,
                map->tileHeight());
     //pm.fill(Qt::transparent);
     QPainter painter(&pm);
 
+    qDebug() << "Tile IDs in map: \n";
+    foreach (Tiled::Tile *t, idMap.keys())
+    {
+        if (t == NULL) continue;
+
+        qDebug() << idMap[t] << "\n";
+    }
+
+    qDebug() << "Let's do this" << "\n";
     foreach (Tiled::Tile *tile, idMap.keys())
     {
         if (tile == NULL)
@@ -65,27 +79,54 @@ void AS3Level::saveLayerTilesheet(const QString &fileName,
             continue;
         }
 
+        unsigned int xRatio = tile->width() / map->tileWidth();
+        unsigned int yRatio = tile->height() / map->tileWidth();
+
+        int tileOffset = map->tileWidth();
+        int checkedIndex = 1;
+        qDebug() << "Current tile: " << idMap[tile] << "\n";
+        while (checkedIndex < idMap[tile])
+        {
+            /**
+             * @todo Optimize offset finding (not that easy, since we can't calculate
+             * it directly (due to possibly varying tile sizes in one layer)
+             */
+            foreach (Tiled::Tile *t, idMap.keys())
+            {
+                if (t == NULL) continue;
+
+                int testIndex = idMap[t];
+                if (checkedIndex == testIndex)
+                {
+                    int tileParts = (t->width() * t->height()) / (map->tileHeight() * map->tileWidth());
+
+                    tileOffset += tileParts * map->tileWidth();
+                    checkedIndex += tileParts;
+
+
+                    qDebug() << "Skipping tiles: " << tileParts << "\n";
+                    qDebug() << "Added width: " << tileParts * map->tileWidth() << "\n";
+
+                    break;  // either this, or have a redundant check for (checkedIndex < idMap[tile]) here
+                }
+            }
+        }
+
         for (unsigned int y = 0; y < yRatio; ++y)
         {
-            for (unsigned int x = 0; x < xRatio; ++x)
+            for (unsigned int x = 0; x < xRatio; ++x, tileOffset += map->tileWidth())
             {
                 int srcX = x * map->tileWidth();
                 int srcY = y * map->tileHeight();
                 QPixmap tilePart = tile->image().copy(srcX, srcY, map->tileWidth(), map->tileHeight());
 
-                int tileId = idMap[tile] - 1;
-                int tileStripStart = (1 + tileId * partsPerTile) * map->tileWidth();
-                int tileStripIndex = y*yRatio + x;
-
-                int targetX = tileStripStart + tileStripIndex * map->tileWidth();
-                painter.drawPixmap(targetX, 0, map->tileWidth(), map->tileHeight(), tilePart);
+                painter.drawPixmap(tileOffset, 0, map->tileWidth(), map->tileHeight(), tilePart);
             }
         }
 //            tile->image().copy()
     }
 
     QString imageFile = QString("%1.png").arg(fileName);
-    qDebug() << "Saving image to " << imageFile << "\n";
     pm.toImage().save(imageFile, 0, 100);
 }
 
@@ -114,6 +155,8 @@ bool AS3Level::save(const QString &fileName, const Tiled::Map *map) const
     QString tilemapInitCode;
     foreach (Tiled::Layer *layer, map->layers())
     {
+        if (!layer->isVisible()) continue;
+
         if (layer->asObjectGroup())
         {
             qCritical() << "Object layers not supported yet. Ignoring layer '" << layer->name() << "'\n";
@@ -191,14 +234,20 @@ void AS3Level::generateLayerTileIDMap(Tiled::Layer *layer, QMap<Tiled::Tile *, i
         qFatal("generateLayerTileIDMap: received invalid (non-tile) layer\n");
     }
 
-    for (int i = 0; i < tileLayer->width(); ++i)
+    for (int j = 0; j < tileLayer->height(); ++j)
     {
-        for (int j = 0; j < tileLayer->height(); ++j)
+        for (int i = 0; i < tileLayer->width(); ++i)
         {
             Tiled::Tile *tile = tileLayer->tileAt(i, j);
-            if (!idMap.contains(tile))
+
+            int xTileParts = tile != NULL ? tile->width() / layer->map()->tileWidth() : 1;
+            int yTileParts = tile != NULL ? tile->height() / layer->map()->tileHeight() : 1;
+            unsigned int tileParts = xTileParts * yTileParts;
+
+            if (!idMap.keys().contains(tile))
             {
-                idMap[tile] = index++;
+                idMap[tile] = index;
+                index += tileParts;
             }
         }
     }
@@ -209,6 +258,9 @@ QString AS3Level::generateLayerVarName(const Tiled::Layer *layer) const
 {
     QString useName = layer->name().toAscii();
     useName[0] = useName[0].toLower();
+    if (!useName[0].isLetter() && useName[0] != '_')
+        useName = "_" + useName;
+
     useName.remove(QChar(' '), Qt::CaseInsensitive);
     useName.remove(QChar(';'), Qt::CaseInsensitive);
     useName.remove(QChar(' '), Qt::CaseInsensitive);
@@ -224,22 +276,24 @@ const QString AS3Level::generateTileData(Tiled::Layer *layer,
 
     const int maxLength = layer->height() * layer->width();
 
+    int xTileParts;
     for (int j = 0; j < layer->height(); ++j)
     {
-        for (int i = 0; i < layer->width(); ++i)
+        for (int i = 0; i < layer->width(); i += xTileParts)
         {
             Tiled::Tile* tile = layer->asTileLayer()->tileAt(i, j);
 
-            int xTileParts = tile != NULL ? tile->width() / layer->map()->tileWidth() : 1;
+            xTileParts = tile != NULL ? tile->width() / layer->map()->tileWidth() : 1;
             int yTileParts = tile != NULL ? tile->height() / layer->map()->tileHeight() : 1;
+            int id = idMap[tile];
 
             for (int l = yTileParts - 1; l >= 0; --l)
             {
                 int negativeOffset = l * layer->width();
-                for (int k = 0; k < xTileParts; ++k)
+                const int indexBase = tileData.length();
+                for (int k = 0; k < xTileParts; ++k, ++id)
                 {
-                    int id = idMap[tile];
-                    int index = tileData.length() - negativeOffset + k;
+                    int index = indexBase - negativeOffset + k;
 
                     if (index < tileData.length())
                     {
@@ -247,7 +301,7 @@ const QString AS3Level::generateTileData(Tiled::Layer *layer,
                     }
                     else if (index < maxLength)
                     {
-                        tileData.append(idMap[tile]);
+                        tileData.append(id);
                     }
                 }
             }
