@@ -103,15 +103,14 @@ bool AS3Level::save(const QString &fileName, const Tiled::Map *map) const
     buffer = buffer.replace(FlxPlaceholders::PACKAGE_NAME, this->packageName);
     buffer = buffer.replace(FlxPlaceholders::CLASS_NAME, targetInfo.baseName());
     buffer = buffer.replace(FlxPlaceholders::TILEMAP_CLASS, this->tilemapClass);
-
     buffer = buffer.replace(FlxPlaceholders::GEN_BY, "FlxExporter v0.2");
-    buffer = buffer.replace(FlxPlaceholders::GEN_DATE, "//! @todo Insert real date");
-
+    buffer = buffer.replace(FlxPlaceholders::GEN_DATE, "@todo Insert real date");
 
     this->generateTilemapDeclarations(map->layers(), buffer);
     this->generateGfxEmbedStatements(map->layers(), buffer);
 
     QString tileData;
+    QString tilemapInitCode;
     foreach (Tiled::Layer *layer, map->layers())
     {
         if (layer->asObjectGroup())
@@ -128,9 +127,11 @@ bool AS3Level::save(const QString &fileName, const Tiled::Map *map) const
             tileIdMap
         );
         QTextStream(&tileData) << this->generateTileData(layer, tileIdMap);
+        QTextStream(&tilemapInitCode) << this->generateTilemapInitCode(layer);
     }
 
     buffer = buffer.replace(FlxPlaceholders::LAYER_TILE_DATA, tileData);
+    buffer = buffer.replace(FlxPlaceholders::TILEMAP_INITIALIZATION, tilemapInitCode);
 
 
     //for (unsigned int i = 0; i < (0-1); ++i)
@@ -150,6 +151,21 @@ bool AS3Level::save(const QString &fileName, const Tiled::Map *map) const
     }
     return false;
 }
+
+const QString AS3Level::generateTilemapInitCode(const Tiled::Layer *layer) const
+{
+    QString result;
+    QString tileMapVar = this->generateLayerVarName(layer) + "Tilemap";
+    QString tileDataVar = this->generateLayerVarName(layer) + "TileData";
+    QString tileGfxVar = this->generateLayerVarName(layer) + "Gfx";
+
+    QTextStream(&result)
+            << QString("%1 = new %2();").arg(tileMapVar, this->tilemapClass) << "\n\t\t\t"
+            << QString("%1.loadMap(%2, %3);").arg(tileMapVar, tileDataVar, tileGfxVar) << "\n\t\t\t"
+            << QString("add(%1);").arg(tileMapVar) << "\n\t\t\t";
+    return result;
+}
+
 
 QString AS3Level::generateTilesheetPath(const QString &levelFileName,
                                      const QString &sheetFileName) const

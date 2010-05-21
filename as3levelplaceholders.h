@@ -12,7 +12,7 @@ namespace FlxPlaceholders
     const char* GEN_DATE = "%generationDate%";
     const char* GFX_EMBED_STATEMENTS = "%gfxEmbedStatements%";
     const char* LAYER_TILE_DATA = "%layerTileData%";
-
+    const char* TILEMAP_INITIALIZATION = "%tilemapInitialization%";
 }
 
 #endif // AS3LEVELPLACEHOLDERS_H

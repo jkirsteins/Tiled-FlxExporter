@@ -44,8 +44,10 @@ namespace Flx
 
         void generateTilemapDeclarations(const QList<Tiled::Layer*> &layers, QString &buffer) const;
         void generateGfxEmbedStatements(const QList<Tiled::Layer*> &layers, QString &buffer) const;
+
         const QString generateTileData(Tiled::Layer* layer,
                               const QMap<Tiled::Tile *, int> idMap) const;
+        const QString generateTilemapInitCode(const Tiled::Layer *layer) const;
 
         void generateLayerTileIDMap(Tiled::Layer *layer, QMap<Tiled::Tile *, int> &idMap) const;
 
