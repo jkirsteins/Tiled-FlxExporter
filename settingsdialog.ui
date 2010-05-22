@@ -150,20 +150,6 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QCommandLinkButton" name="commandLinkButton">
-           <property name="text">
-            <string>CommandLinkButton</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox">
-           <property name="text">
-            <string>CheckBox</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
             <string>Package</string>

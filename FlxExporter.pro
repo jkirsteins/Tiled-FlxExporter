@@ -4,7 +4,6 @@ INCLUDEPATH = ../..
 TARGET = $$qtLibraryTarget(flx)
 DESTDIR = ../../../lib/tiled/plugins
 DEFINES += FLX_LIBRARY
-OBJECTS += ../../.obj/map.o
 SOURCES += flxexporter.cpp \
     settingsdialog.cpp \
     as3level.cpp \
