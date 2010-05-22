@@ -1,5 +1,23 @@
-#include "as3level.h"
-#include "as3levelplaceholders.h"
+/*
+ * FlxExporter for Tiled Map Editor (Qt)
+ * Copyright 2010 Jânis Kirðteins <janis@janiskirsteins.org>
+ *
+ * This file is part of FlxExporter for Tiled Map Editor
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place, Suite 330, Boston, MA 02111-1307, USA.
+ */
 
 #include <QFile>
 #include <QByteArray>
@@ -10,6 +28,7 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QList>
+#include <QApplication>
 
 #include "tilelayer.h"
 #include "layer.h"
@@ -17,6 +36,7 @@
 
 #include "progressdialog.h"
 #include "as3levelplaceholders.h"
+#include "as3level.h"
 
 using namespace Flx;
 
@@ -59,18 +79,9 @@ void AS3Level::saveLayerTilesheet(const QString &fileName,
 
     QPixmap pm(imageWidth,
                map->tileHeight());
-    //pm.fill(Qt::transparent);
+    pm.fill(Qt::transparent);
     QPainter painter(&pm);
 
-    qDebug() << "Tile IDs in map: \n";
-    foreach (Tiled::Tile *t, idMap.keys())
-    {
-        if (t == NULL) continue;
-
-        qDebug() << idMap[t] << "\n";
-    }
-
-    qDebug() << "Let's do this" << "\n";
     foreach (Tiled::Tile *tile, idMap.keys())
     {
         if (tile == NULL)
@@ -136,7 +147,7 @@ void AS3Level::saveLayerTilesheet(const QString &fileName,
 bool AS3Level::save(const QString &fileName, const Tiled::Map *map) const
 {
     ProgressDialog pd(NULL);
-    pd.setMaxProgress(10);
+    pd.setMaxProgress(map->layers().count() + 1);
     pd.open();
 
     QString buffer(this->blueprint);
@@ -155,6 +166,9 @@ bool AS3Level::save(const QString &fileName, const Tiled::Map *map) const
     QString tilemapInitCode;
     foreach (Tiled::Layer *layer, map->layers())
     {
+        pd.updateProgress();
+        QApplication::instance()->processEvents();
+
         if (!layer->isVisible()) continue;
 
         if (layer->asObjectGroup())
@@ -268,6 +282,13 @@ QString AS3Level::generateLayerVarName(const Tiled::Layer *layer) const
     return useName;
 }
 
+/**
+ * Function generates tile index string for a given layer
+ * that is used by FlxTilemap.loadMap.
+ *
+ * @todo Fix issue with non-standard size tiles overlapping
+ *       borders of map.
+ */
 const QString AS3Level::generateTileData(Tiled::Layer *layer,
                                 const QMap<Tiled::Tile *, int> idMap) const
 {

@@ -12,8 +12,8 @@ SOURCES += flxexporter.cpp \
 HEADERS += flxexporter.h \
     settingsdialog.h \
     as3level.h \
-    progressdialog.h \
-    as3levelplaceholders.h
+    as3levelplaceholders.h \
+    progressdialog.h
 RESOURCES += ASTemplates.qrc
 FORMS += settingsdialog.ui \
     progressdialog.ui

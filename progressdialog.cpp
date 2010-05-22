@@ -1,8 +1,8 @@
-#include "progressdialog.h"
-#include "ui_progressdialog.h"
+#include "ProgressDialog.h"
+#include "ui_ProgressDialog.h"
 
 ProgressDialog::ProgressDialog(QWidget *parent) :
-    QDialog(parent),
+    QProgressDialog(parent),
     ui(new Ui::ProgressDialog)
 {
     ui->setupUi(this);
@@ -11,6 +11,11 @@ ProgressDialog::ProgressDialog(QWidget *parent) :
 ProgressDialog::~ProgressDialog()
 {
     delete ui;
+}
+
+void ProgressDialog::updateProgress(const unsigned char step) const
+{
+    ui->progressBar->setValue(ui->progressBar->value() + step);
 }
 
 void ProgressDialog::setProgress(unsigned char pctg) const
@@ -25,7 +30,7 @@ void ProgressDialog::setMaxProgress(unsigned char pctg) const
 
 void ProgressDialog::changeEvent(QEvent *e)
 {
-    QDialog::changeEvent(e);
+    QProgressDialog::changeEvent(e);
     switch (e->type()) {
     case QEvent::LanguageChange:
         ui->retranslateUi(this);

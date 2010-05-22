@@ -23,6 +23,7 @@ public:
 
     const QString getPackageName() const;
     const QString getTilemapClass() const;
+    const void generateSummary(const Tiled::Map *map) const;
     const void enableDerivedClassOption(const QString &name);
 
     const QString getDerivedFileName() const;
