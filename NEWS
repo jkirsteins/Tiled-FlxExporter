@@ -1,0 +1,14 @@
+0.2 (21 May 2010)
+* Refactored code
+* Added ability to auto-detect package name hints
+* Added ability to override tilemap class name
+* Added a summary view before exporting
+* Added a settings dialog
+* Added a progress dialog
+
+0.1.1 (28 April 2010)
+* Added proof-of-concept support for objects
+* Added proof-of-concept support for exporting collision data
+
+0.1.0 (28 April 2010)
+* Initial proof-of-concept version
