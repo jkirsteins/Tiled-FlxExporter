@@ -355,6 +355,10 @@ void AS3Level::generateGfxEmbedStatements(const QList<Tiled::Layer *> &layers, Q
     QString embedStatements;
     foreach (Tiled::Layer *layer, layers)
     {
+        //! @todo Unify checks for supported layers
+        if (!layer->isVisible() && !layer->asTileLayer()) continue;
+        //if (this->isLayerSupported(layer))
+
         QTextStream(&embedStatements)
                 << QString("[Embed(source=\"gfx/%1.png\")]\n\t\t").arg(this->generateLayerVarName(layer))
                 << "protected static const " << this->generateLayerVarName(layer) << "Gfx: Class;\n\t\t";
